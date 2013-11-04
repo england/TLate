@@ -1,4 +1,4 @@
 TLate
 =====
 
-sublime text 3 translation plugin
+Sublime Text 3 translation plugin
