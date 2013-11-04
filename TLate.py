@@ -24,14 +24,14 @@ class TlateCommand(sublime_plugin.TextCommand):
 
   def replace_selections(self, idx):
     if idx != -1:
-      translation = self.translates()[idx]
+      translation = self.translations()[idx]
       self.view.run_command("replace_selection_with_translation",
         { "a": self.sel.a, "b": self.sel.b, "translation": translation })
 
   def show_popup_menu(self):
-    self.view.show_popup_menu(self.translates(), self.replace_selections)
+    self.view.show_popup_menu(self.translations(), self.replace_selections)
 
-  def translates(self):
+  def translations(self):
     return [x["trans"] for x in self.result["sentences"]]
 
   def call_remote_serice(self):
