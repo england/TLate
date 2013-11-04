@@ -17,3 +17,4 @@ Sublime Text 3 translation plugin
 - [ ] use several translation services
 - [ ] configure langs (currently supports only ru/en)
 - [ ] verbose output with quick panel instead popup menu?
+- [ ] show process status
