@@ -16,27 +16,14 @@ class TlateCommand(sublime_plugin.TextCommand):
   EN = re.compile("[a-z]", re.IGNORECASE)
   RU = re.compile("[а-я]", re.IGNORECASE)
 
-  def detect_lang(self, text):
-    if len(self.RU.findall(text)) > len(self.EN.findall(text)):
-      return("ru")
-    else:
-      return("en")
+  def run(self, edit, *args):
+    self.edit = edit
+    self.sel = self.view.sel()[0]
+    sublime.set_timeout_async(self.__call_remote_serice, 0)
 
-  def replace_selections(self, idx):
-    if idx != -1:
-      translation = self.translations()[idx]
-      self.view.run_command("replace_selection_with_translation",
-        { "a": self.sel.a, "b": self.sel.b, "translation": translation })
-
-  def show_popup_menu(self):
-    self.view.show_popup_menu(self.translations(), self.replace_selections)
-
-  def translations(self):
-    return [x["trans"] for x in self.result["sentences"]]
-
-  def call_remote_serice(self):
+  def __call_remote_serice(self):
     text = self.view.substr(self.sel)
-    lang = self.detect_lang(text)
+    lang = self.__detect_lang(text)
     params = {
       "client": 'x',
       "text": text,
@@ -45,14 +32,26 @@ class TlateCommand(sublime_plugin.TextCommand):
     }
     params = urllib.parse.urlencode(params)
     page = self.OPENER.open("http://translate.google.ru/translate_a/t?" + params)
-    self.detect_lang(text)
     self.result = json.loads(page.read().decode('utf-8'))
-    self.show_popup_menu()
+    self.__show_popup_menu()
 
-  def run(self, edit, *args):
-    self.edit = edit
-    self.sel = self.view.sel()[0]
-    sublime.set_timeout_async(self.call_remote_serice, 0)
+  def __detect_lang(self, text):
+    if len(self.RU.findall(text)) > len(self.EN.findall(text)):
+      return("ru")
+    else:
+      return("en")
+
+  def __show_popup_menu(self):
+    self.view.show_popup_menu(self.__translations(), self.__replace_selections)
+
+  def __translations(self):
+    return [x["trans"] for x in self.result["sentences"]]
+
+  def __replace_selections(self, idx):
+    if idx != -1:
+      translation = self.__translations()[idx]
+      self.view.run_command("replace_selection_with_translation",
+        { "a": self.sel.a, "b": self.sel.b, "translation": translation })
 
 class ReplaceSelectionWithTranslation(sublime_plugin.TextCommand):
   def run(self, edit, **args):
