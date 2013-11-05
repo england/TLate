@@ -19,3 +19,4 @@ Sublime Text 3 translation plugin
 - [ ] verbose output with quick panel instead popup menu?
 - [ ] show process status
 - [ ] multiline support
+- [ ] synonyms
