@@ -20,3 +20,4 @@ Sublime Text 3 translation plugin
 - [ ] show process status
 - [ ] multiline support
 - [ ] synonyms
+- [ ] configure ui lang
