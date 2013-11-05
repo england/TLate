@@ -21,3 +21,4 @@ Sublime Text 3 translation plugin
 - [ ] multiline support
 - [ ] synonyms
 - [ ] configure ui lang
+- [ ] shortcut to show only verbs and so on
