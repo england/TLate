@@ -3,8 +3,13 @@ import urllib
 import json
 import re
 
+global tlate_awaiting
 
-class TlateCommand(sublime_plugin.TextCommand):
+class HuehueCommand(sublime_plugin.TextCommand):
+  def run(self, edit, *args):
+    print('second level command fired')
+
+class TlateTranslationsCommand(sublime_plugin.WindowCommand):
   class GoogleCompatibleOpener(urllib.request.FancyURLopener):
     # some random user-agent
     version = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.114 Safari/537.36'
@@ -16,13 +21,12 @@ class TlateCommand(sublime_plugin.TextCommand):
   EN = re.compile("[a-z]", re.IGNORECASE)
   RU = re.compile("[а-я]", re.IGNORECASE)
 
-  def run(self, edit, *args):
-    self.edit = edit
-    self.sel = self.view.sel()[0]
-    sublime.set_timeout_async(self.__call_remote_serice, 0)
+  def run(self):
+    self.sel = self.window.active_view().sel()[0]
+    sublime.set_timeout_async(self.__call_remote_service, 0)
 
-  def __call_remote_serice(self):
-    text = self.view.substr(self.sel)
+  def __call_remote_service(self):
+    text = self.window.active_view().substr(self.sel)
     lang = self.__detect_lang(text)
     params = {
       "client": 'x',
@@ -33,7 +37,7 @@ class TlateCommand(sublime_plugin.TextCommand):
     params = urllib.parse.urlencode(params)
     page = self.OPENER.open("http://translate.google.ru/translate_a/t?" + params)
     self.result = json.loads(page.read().decode('utf-8'))
-    self.__show_popup_menu()
+    self.__show_translations_panel()
 
   def __detect_lang(self, text):
     if len(self.RU.findall(text)) > len(self.EN.findall(text)):
@@ -41,23 +45,51 @@ class TlateCommand(sublime_plugin.TextCommand):
     else:
       return("en")
 
-  def __show_popup_menu(self):
-    self.view.show_popup_menu(self.__translations(), self.__replace_selections)
+  def __show_translations_panel(self):
+    global tlate_awaiting
+    tlate_awaiting = 'tlate_translations_panel'
+    self.window.show_quick_panel(self.__translation_panel_items(),
+                                 self.__replace_selections,
+                                 0,
+                                 0,
+                                 self.__on_highlighted)
 
-  def __translations(self):
-    return [x["trans"] for x in self.result["sentences"]]
+  def __translation_panel_items(self):
+    translations = []
+    if 'dict' in self.result:
+      for part_of_speech in self.result['dict']:
+        for entry in part_of_speech['entry']:
+          translations.append([
+            entry['word'],
+            ', '.join(entry['reverse_translation']),
+            part_of_speech['pos']
+          ])
+    else:
+      translations = [[self.result['sentences'][0]['trans'], '-', '-']]
+    return translations
 
   def __replace_selections(self, idx):
+    view = self.window.active_view()
     if idx != -1:
-      translation = self.__translations()[idx]
-      self.view.run_command("replace_selection_with_translation",
+      translation = self.__translation_panel_items()[idx][0]
+      view.run_command("replace_selection_with_translation",
         { "a": self.sel.a, "b": self.sel.b, "translation": translation })
+    view.settings().set('tlate_translations_panel_activated', False)
+
+  def __on_highlighted(self, idx):
+    print('on highlighted: ', idx)
 
 class ReplaceSelectionWithTranslation(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     self.view.replace(edit, sublime.Region(args['a'], args['b']), args['translation'])
 
-
+class Werqwedq(sublime_plugin.EventListener):
+  def on_activated_async(self, view):
+    global tlate_awaiting
+    views_ids = [v.view_id for v in view.window().views()]
+    if tlate_awaiting == 'tlate_translations_panel' and view.view_id not in views_ids:
+      view.settings().set('tlate_translations_panel_activated', True)
+      tlate_awaiting = None
 
 # response examples:
 #   phrase:

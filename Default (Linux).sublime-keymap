@@ -1,3 +1,18 @@
 [
-  { "keys": ["ctrl+'"], "command": "tlate" }
+  {
+    "keys": ["ctrl+'"],
+    "command": "tlate_translations",
+    "context": [
+      { "key": "overlay_visible", "operator": "equal", "operand": false },
+      { "key": "setting.tlate_translations_panel_activated", "operator": "equal", "operand": false }
+    ]
+  },
+  {
+    "keys": ["ctrl+'"],
+    "command": "huehue",
+    "context": [
+      { "key": "overlay_visible", "operator": "equal", "operand": true },
+      { "key": "setting.tlate_translations_panel_activated", "operator": "equal", "operand": true }
+    ]
+  }
 ]
