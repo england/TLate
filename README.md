@@ -22,3 +22,4 @@ Sublime Text 3 translation plugin
 - [ ] synonyms
 - [ ] configure ui lang
 - [ ] shortcut to show only verbs and so on
+- [ ] ability to return back to translations list from second level quick panel
