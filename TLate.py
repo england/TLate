@@ -3,9 +3,6 @@ import urllib
 import json
 import re
 
-# name of quick popup awaiting
-global tlate_awaiting
-
 # first level quick panel items
 global translation_panel_items
 
@@ -18,14 +15,14 @@ global text_view
 class HuehueCommand(sublime_plugin.WindowCommand):
   def run(self):
     print('second level command fired')
-    print(translation_panel_items[selected_translation_panel_item_idx])
     self.window.run_command('hide_overlay')
+    # TLateSession().get('translation_panel_items')
     items = translation_panel_items[selected_translation_panel_item_idx][1].split(', ')
     self.window.show_quick_panel(items,
-                             self.__replace_selections,
-                             0,
-                             0,
-                             None)
+                                 self.__replace_selections,
+                                 0,
+                                 0,
+                                 None)
 
   def __sel(self):
     return self.window.active_view().sel()[0]
@@ -78,15 +75,11 @@ class TlateTranslationsCommand(sublime_plugin.WindowCommand):
       return("en")
 
   def __show_translations_panel(self):
-    global tlate_awaiting
     global translation_panel_items
     translation_panel_items = self.__translation_panel_items()
-    tlate_awaiting = 'tlate_translations_panel'
-    self.window.show_quick_panel(translation_panel_items,
-                                 self.__replace_selections,
-                                 0,
-                                 0,
-                                 self.__on_highlighted)
+    show_and_wait_quick_panel('tlate_translations_panel', lambda: self.window.show_quick_panel(translation_panel_items, self.__replace_selections, 0, 0, self.__on_highlighted))
+    # TLateSession().panel_expected('tlate_translations_panel')
+    # self.window.show_quick_panel(translation_panel_items, self.__replace_selections, 0, 0, self.__on_highlighted)
 
   def __translation_panel_items(self):
     translations = []
@@ -121,17 +114,43 @@ class TlateReplaceSelection(sublime_plugin.TextCommand):
 
 class Werqwedq(sublime_plugin.EventListener):
   def on_activated_async(self, view):
-    if self.__view_is_expected_panel(view, 'tlate_translations_panel'):
+    if view_is_expected_panel(view, 'tlate_translations_panel'):
       view.settings().set('tlate_translations_panel_activated', True)
-      tlate_awaiting = None
 
-  # TODO: move out from here
-  def __view_is_expected_panel(self, view, name):
-    global tlate_awaiting
-    return self.__view_is_quick_panel(view) and tlate_awaiting == name
+def show_and_wait_quick_panel(name, func):
+    TLateSession().panel_expected(name)
+    func()
 
-  def __view_is_quick_panel(self, view):
-    return view.view_id not in [v.view_id for v in view.window().views()]
+def view_is_expected_panel(view, name):
+  return view_is_quick_panel(view) and TLateSession().is_panel_expected(name)
+
+def view_is_quick_panel(view):
+  return view.view_id not in [v.view_id for v in view.window().views()]
+
+class TLateSession(object):
+  def __new__(klass):
+    if not hasattr(klass, 'instance'):
+      klass.instance = super(TLateSession, klass).__new__(klass)
+      klass.name = None
+    return klass.instance
+
+  def panel_expected(self, name):
+    self.name = name
+
+  def is_panel_expected(self, name):
+    if self.name == name:
+      self.name = None
+      return True
+    else:
+      return False
+
+  def set(self, name, value):
+    pass
+
+  def get(self, name):
+    pass
+
+# TLateSession().wait('asd')
 
 # response examples:
 #   phrase:
